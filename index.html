@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>มีอะไรอยากบอก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&family=Caveat:wght@500;700&family=Kalam:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Mali',sans-serif;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255,200,225,.45), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 80% 30%, rgba(180,210,255,.45), transparent 60%),
+    radial-gradient(ellipse 90% 60% at 50% 80%, rgba(230,210,255,.4), transparent 70%),
+    linear-gradient(180deg,#fff5fa 0%,#f0f5ff 50%,#fdf5ff 100%);
+  background-attachment:fixed;
+  color:#4a3a5e;
+  overflow-x:hidden;
+  min-height:100vh;
+}
+.hand-th{font-family:'Mali',sans-serif}
+.hand-en{font-family:'Caveat',cursive}
+.kalam{font-family:'Kalam',sans-serif}
+.patrick{font-family:'Patrick Hand',sans-serif}
+
+/* ============================================================
+   START GATE
+============================================================ */
+#start-gate{
+  position:fixed;inset:0;z-index:10000;
+  background:linear-gradient(135deg,#ffe5f0 0%,#e5eeff 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:30px;
+  transition:opacity .8s ease,visibility .8s;
+}
+#start-gate.gone{opacity:0;visibility:hidden;pointer-events:none}
+.gate-doodle{position:relative;width:200px;height:160px;margin-bottom:10px}
+.gate-line1{
+  font-family:'Caveat',cursive;font-size:42px;color:#d4639a;
+  transform:rotate(-3deg);margin-bottom:6px;
+}
+.gate-line2{
+  font-family:'Mali',sans-serif;font-size:18px;color:#7a6a90;
+  letter-spacing:.5px;margin-bottom:30px;
+}
+.gate-line2 span{color:#d4639a;font-weight:600}
+.start-btn{
+  position:relative;
+  padding:18px 50px;
+  background:#ffb5d0;
+  color:#fff;border:none;border-radius:50px 45px 55px 40px;
+  font-family:'Kalam',sans-serif;font-weight:700;font-size:20px;letter-spacing:1px;
+  cursor:pointer;
+  box-shadow:6px 8px 0 rgba(212,99,154,.25);
+  transform:rotate(-2deg);
+  transition:all .25s ease;
+}
+.start-btn:hover{transform:rotate(2deg) scale(1.05);box-shadow:8px 10px 0 rgba(212,99,154,.3)}
+.start-btn:active{transform:rotate(0) translate(3px,3px);box-shadow:3px 4px 0 rgba(212,99,154,.25)}
+
+/* ============================================================
+   LOADER
+============================================================ */
+#loader{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#fff5fa 0%,#f0f5ff 100%);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+}
+#loader.on{display:flex}
+#loader.gone{opacity:0;visibility:hidden;transition:opacity .9s,visibility .9s}
+
+.kitty-doodle{position:relative;animation:wiggle 2s ease-in-out infinite}
+@keyframes wiggle{
+  0%,100%{transform:rotate(-3deg) translateY(0)}
+  50%{transform:rotate(3deg) translateY(-10px)}
+}
+.loader-svg{width:180px;height:170px}
+
+.loader-num{
+  margin-top:30px;
+  font-family:'Caveat',cursive;
+  font-size:90px;font-weight:700;
+  color:#d4639a;line-height:1;
+  transform:rotate(-2deg);
+}
+.loader-num::after{
+  content:'%';font-size:30px;color:#7a9ed4;margin-left:4px;
+}
+.loader-bar{
+  width:240px;height:7px;
+  background:rgba(255,255,255,.8);
+  border-radius:10px;margin-top:18px;overflow:hidden;
+  border:1.5px dashed #f4b8d2;
+  padding:1px;
+}
+.loader-bar-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#ffa8c8,#a8c8ff);
+  border-radius:10px;
+  transition:width .04s linear;
+}
+.loader-msg{
+  margin-top:22px;color:#a08bb8;
+  font-family:'Patrick Hand',sans-serif;font-size:18px;
+  transform:rotate(-1deg);
+}
+
+/* ============================================================
+   FLOATING DOODLES (custom SVG)
+============================================================ */
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.parallax-layer{position:fixed;will-change:transform;pointer-events:none;z-index:1}
+.blob{
+  border-radius:50% 60% 50% 70%;
+  filter:blur(55px);
+  opacity:.5;
+}
+.doodle{position:fixed;will-change:transform;pointer-events:none;z-index:2}
+.doodle.sway{animation:sway 6s ease-in-out infinite}
+.doodle.spin-slow{animation:spinSlow 18s linear infinite}
+@keyframes sway{
+  0%,100%{transform:translate(0,0) rotate(-8deg)}
+  50%{transform:translate(12px,-15px) rotate(8deg)}
+}
+@keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* ============================================================
+   SECTIONS
+============================================================ */
+section{
+  min-height:100vh;
+  position:relative;z-index:5;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 24px;
+  perspective:1500px;
+}
+.section-inner{
+  max-width:720px;width:100%;
+  opacity:0;
+  transform:translateY(120px) rotateX(12deg);
+  transform-origin:center bottom;
+  transition:opacity 1.2s cubic-bezier(.16,1,.3,1),transform 1.2s cubic-bezier(.16,1,.3,1);
+  transform-style:preserve-3d;
+}
+.section-inner.in{opacity:1;transform:translateY(0) rotateX(0)}
+
+/* Hero */
+#hero{padding-top:60px}
+.hero-tag{
+  font-family:'Caveat',cursive;font-size:32px;color:#d4639a;
+  transform:rotate(-4deg);margin-bottom:0;
+  text-align:left;
+  display:inline-block;
+}
+.hero-title{
+  font-family:'Mali',sans-serif;font-weight:700;
+  font-size:clamp(48px,11vw,108px);
+  color:#5a3a72;line-height:1.05;
+  margin:8px 0 18px;
+  text-align:left;
+}
+.hero-title .pink{color:#d4639a}
+.hero-title .blue{color:#5a8ad6}
+.hero-title em{
+  font-style:normal;font-family:'Caveat',cursive;font-weight:700;
+  color:#d4639a;font-size:1.2em;
+  display:inline-block;transform:rotate(-3deg);
+}
+.hero-sub{
+  font-family:'Patrick Hand',sans-serif;
+  font-size:20px;color:#7a6a90;margin-bottom:30px;
+  text-align:left;
+  line-height:1.6;
+}
+.hero-row{
+  display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;
+}
+.hero-left{flex:1;min-width:280px}
+.hero-kitty-wrap{
+  flex-shrink:0;
+  width:min(280px,60vw);
+}
+.hero-kitty{width:100%;height:auto;filter:drop-shadow(0 18px 30px rgba(212,99,154,.3))}
+
+/* scroll cue */
+.scroll-cue{
+  position:absolute;bottom:30px;left:50%;
+  font-family:'Caveat',cursive;font-size:22px;color:#7a9ed4;
+  animation:bouncey 2s ease-in-out infinite;
+  transform:translateX(-50%) rotate(-3deg);
+}
+@keyframes bouncey{
+  0%,100%{transform:translateX(-50%) rotate(-3deg) translateY(0)}
+  50%{transform:translateX(-50%) rotate(-3deg) translateY(-8px)}
+}
+
+/* Section 2 — letter */
+.letter-paper{
+  background:#fffaf0;
+  border-radius:6px;
+  padding:42px 38px 36px;
+  position:relative;
+  margin-top:30px;
+  box-shadow:
+    0 22px 50px rgba(168,125,255,.18),
+    0 4px 12px rgba(212,99,154,.12);
+  transform:rotate(-1.5deg);
+  font-family:'Mali',sans-serif;
+  border:1px solid #f0e0e5;
+}
+.letter-paper::before{
+  /* tape on top */
+  content:'';position:absolute;top:-14px;left:50%;transform:translateX(-50%) rotate(-3deg);
+  width:90px;height:26px;
+  background:rgba(255,184,210,.6);
+  border-left:1px dashed rgba(255,255,255,.6);
+  border-right:1px dashed rgba(255,255,255,.6);
+}
+.letter-paper::after{
+  /* paper lines */
+  content:'';position:absolute;inset:0;
+  background-image:repeating-linear-gradient(
+    transparent 0 28px,
+    rgba(212,180,200,.15) 28px 29px
+  );
+  pointer-events:none;border-radius:6px;
+}
+.letter-greeting{
+  font-family:'Caveat',cursive;font-size:38px;color:#d4639a;
+  transform:rotate(-2deg);display:inline-block;
+  margin-bottom:14px;
+}
+.letter-body{
+  font-size:17px;line-height:1.95;color:#4a3a5e;
+  position:relative;z-index:1;
+}
+.letter-body p{margin:10px 0}
+.letter-body .pen-pink{color:#d4639a;font-weight:600}
+.letter-body .pen-blue{color:#5a8ad6}
+.letter-body .strike{text-decoration:line-through;color:#a89bb8;opacity:.7}
+.letter-sign{
+  font-family:'Caveat',cursive;font-size:34px;
+  color:#5a8ad6;margin-top:18px;
+  transform:rotate(-2deg);display:inline-block;
+}
+
+/* small heart doodle in letter */
+.letter-heart-doodle{
+  position:absolute;bottom:24px;right:30px;
+  font-family:'Caveat',cursive;color:#d4639a;
+  transform:rotate(-12deg);font-size:20px;
+}
+
+/* Section 3 — things i love about you */
+#things h2{
+  font-family:'Caveat',cursive;font-size:54px;color:#5a3a72;
+  transform:rotate(-2deg);display:inline-block;margin-bottom:6px;
+}
+#things .small{
+  font-family:'Patrick Hand',sans-serif;color:#7a9ed4;font-size:18px;
+  display:block;margin-bottom:26px;
+  transform:rotate(1deg);
+}
+.notes{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:24px;
+}
+.note{
+  background:#fff;
+  padding:22px 20px 26px;
+  position:relative;
+  font-family:'Patrick Hand',sans-serif;
+  font-size:18px;line-height:1.5;color:#4a3a5e;
+  box-shadow:0 12px 25px rgba(168,125,255,.18);
+  transition:transform .4s cubic-bezier(.16,1,.3,1);
+  transform-style:preserve-3d;
+}
+.note:nth-child(1){background:#fff0f7;transform:rotate(-2deg)}
+.note:nth-child(2){background:#eef4ff;transform:rotate(1.5deg)}
+.note:nth-child(3){background:#f8f0ff;transform:rotate(-1deg)}
+.note:nth-child(4){background:#fff0f7;transform:rotate(2deg)}
+.note:nth-child(5){background:#eef4ff;transform:rotate(-2deg)}
+.note:nth-child(6){background:#f8f0ff;transform:rotate(1deg)}
+.note:hover{transform:translateY(-8px) rotate(0) scale(1.04);box-shadow:0 22px 45px rgba(212,99,154,.3)}
+.note::before{
+  content:'';position:absolute;top:-10px;left:50%;
+  transform:translateX(-50%) rotate(-4deg);
+  width:60px;height:18px;
+  background:rgba(255,184,210,.5);
+  border-left:1px dashed rgba(255,255,255,.7);
+  border-right:1px dashed rgba(255,255,255,.7);
+}
+.note-num{
+  font-family:'Caveat',cursive;font-size:32px;color:#d4639a;
+  display:block;margin-bottom:6px;line-height:1;
+  transform:rotate(-3deg);
+  width:max-content;
+}
+
+/* Section 4 — the question */
+#ask .section-inner{text-align:center}
+.ask-tag{
+  font-family:'Caveat',cursive;font-size:32px;color:#7a9ed4;
+  transform:rotate(-3deg);display:inline-block;margin-bottom:6px;
+}
+.ask-title{
+  font-family:'Mali',sans-serif;font-weight:700;
+  font-size:clamp(56px,13vw,140px);
+  color:#d4639a;line-height:.95;
+  margin:14px 0 6px;
+}
+.ask-title .line2{color:#5a8ad6;display:block}
+.ask-sub{
+  font-family:'Caveat',cursive;font-size:28px;color:#7a6a90;
+  margin-top:14px;transform:rotate(-1deg);display:inline-block;
+}
+
+.ring-wrap{margin:30px auto;width:160px;height:160px;animation:floatRing 4s ease-in-out infinite}
+@keyframes floatRing{
+  0%,100%{transform:translateY(0) rotate(-5deg)}
+  50%{transform:translateY(-15px) rotate(5deg)}
+}
+
+.btn-row{margin-top:34px;position:relative;height:90px;display:flex;justify-content:center;align-items:center;gap:20px;flex-wrap:wrap}
+.btn-yes{
+  background:#ff8fb8;color:#fff;
+  border:none;
+  border-radius:50px 40px 55px 45px;
+  padding:20px 56px;
+  font-family:'Kalam',sans-serif;font-weight:700;font-size:24px;
+  cursor:pointer;
+  box-shadow:6px 8px 0 rgba(212,99,154,.25);
+  transform:rotate(-2deg);
+  transition:all .25s ease;
+}
+.btn-yes:hover{transform:rotate(2deg) scale(1.05);box-shadow:8px 10px 0 rgba(212,99,154,.3)}
+.btn-no{
+  position:absolute;
+  background:#fff;color:#7a9ed4;
+  border:2px dashed #a8c8ff;
+  border-radius:40px 50px 45px 50px;
+  padding:14px 26px;
+  font-family:'Patrick Hand',sans-serif;font-size:16px;
+  cursor:pointer;
+  box-shadow:4px 5px 0 rgba(122,158,212,.2);
+  transition:transform .3s ease;
+  transform:rotate(2deg);
+}
+
+/* falling stickers */
+.fall{position:fixed;top:-30px;pointer-events:none;z-index:30;animation:fallDown linear forwards}
+@keyframes fallDown{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+.fall svg{width:36px;height:36px}
+
+/* YES screen */
+#yes-screen{
+  position:fixed;inset:0;z-index:200;
+  background:linear-gradient(135deg,#ffb5d0 0%,#a8c8ff 100%);
+  display:none;align-items:center;justify-content:center;flex-direction:column;
+  text-align:center;padding:30px;
+  animation:zoomIn 1s cubic-bezier(.16,1,.3,1);
+}
+@keyframes zoomIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+#yes-screen.on{display:flex}
+.yes-big{
+  font-family:'Caveat',cursive;font-size:clamp(110px,22vw,240px);
+  color:#fff;line-height:1;
+  text-shadow:0 8px 30px rgba(212,99,154,.5);
+  transform:rotate(-4deg);
+  animation:bigBeat 1.5s ease-in-out infinite;
+}
+@keyframes bigBeat{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(-4deg) scale(1.08)}}
+.yes-sub{
+  font-family:'Mali',sans-serif;color:#fff;font-size:20px;
+  margin-top:18px;letter-spacing:1px;
+  max-width:400px;line-height:1.6;
+}
+
+/* audio toggle */
+#audio-toggle{
+  position:fixed;top:20px;right:20px;z-index:500;
+  width:46px;height:46px;border-radius:50%;
+  background:#fff;border:2px dashed #f4b8d2;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  box-shadow:3px 4px 0 rgba(212,99,154,.2);
+  transition:transform .2s;
+}
+#audio-toggle:hover{transform:rotate(15deg) scale(1.05)}
+#audio-toggle svg{width:22px;height:22px}
+
+footer{
+  padding:36px 20px;text-align:center;
+  font-family:'Caveat',cursive;color:#a89bb8;font-size:22px;
+  position:relative;z-index:5;
+  transform:rotate(-1deg);
+}
+
+@media(max-width:640px){
+  .letter-paper{padding:30px 24px}
+  .letter-greeting{font-size:30px}
+  .letter-body{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     CUSTOM SVG STICKER LIBRARY (hidden, used as <use>)
+============================================================ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+
+    <!-- HEART scribble (hand-drawn) -->
+    <symbol id="heart1" viewBox="0 0 64 60">
+      <path d="M32 54 C 4 35, 4 12, 18 8 C 26 6, 30 12, 32 18 C 34 12, 38 6, 46 8 C 60 12, 60 35, 32 54 Z"
+            fill="#ff97b8" stroke="#d4639a" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 18 C 20 22, 22 28, 26 30" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+    </symbol>
+
+    <!-- HEART outline -->
+    <symbol id="heart2" viewBox="0 0 64 60">
+      <path d="M32 54 C 4 35, 4 12, 18 8 C 26 6, 30 12, 32 18 C 34 12, 38 6, 46 8 C 60 12, 60 35, 32 54 Z"
+            fill="none" stroke="#5a8ad6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- STAR doodle (hand-drawn 5-point) -->
+    <symbol id="star1" viewBox="0 0 60 60">
+      <path d="M30 6 L36 22 L54 24 L40 36 L44 54 L30 44 L16 54 L20 36 L6 24 L24 22 Z"
+            fill="#ffd966" stroke="#d4a020" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="24" cy="24" r="2" fill="#fff" opacity=".7"/>
+    </symbol>
+
+    <!-- TINY SPARKLE star (4-point) -->
+    <symbol id="sparkle1" viewBox="0 0 40 40">
+      <path d="M20 4 L23 18 L36 20 L23 22 L20 36 L17 22 L4 20 L17 18 Z"
+            fill="#a8c8ff" stroke="#5a8ad6" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- FLOWER -->
+    <symbol id="flower1" viewBox="0 0 64 64">
+      <circle cx="32" cy="14" r="9" fill="#ffb5d0" stroke="#d4639a" stroke-width="2"/>
+      <circle cx="50" cy="32" r="9" fill="#ffb5d0" stroke="#d4639a" stroke-width="2"/>
+      <circle cx="32" cy="50" r="9" fill="#ffb5d0" stroke="#d4639a" stroke-width="2"/>
+      <circle cx="14" cy="32" r="9" fill="#ffb5d0" stroke="#d4639a" stroke-width="2"/>
+      <circle cx="32" cy="32" r="8" fill="#ffd966" stroke="#d4a020" stroke-width="2"/>
+    </symbol>
+
+    <!-- BOW -->
+    <symbol id="bow1" viewBox="0 0 80 50">
+      <ellipse cx="22" cy="25" rx="20" ry="14" fill="#ff97b8" stroke="#d4639a" stroke-width="2" transform="rotate(-12 22 25)"/>
+      <ellipse cx="58" cy="25" rx="20" ry="14" fill="#ff97b8" stroke="#d4639a" stroke-width="2" transform="rotate(12 58 25)"/>
+      <ellipse cx="40" cy="25" rx="7" ry="9" fill="#d4639a" stroke="#a8487a" stroke-width="2"/>
+      <path d="M36 38 L32 50 L40 44 L48 50 L44 38" fill="#ff97b8" stroke="#d4639a" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- CLOUD doodle -->
+    <symbol id="cloud1" viewBox="0 0 90 50">
+      <path d="M20 40 Q 8 40, 8 28 Q 8 18, 20 18 Q 22 8, 36 10 Q 44 4, 54 12 Q 68 8, 70 22 Q 82 22, 82 32 Q 82 42, 70 42 Z"
+            fill="#fff" stroke="#c8d8e8" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- SQUIGGLE -->
+    <symbol id="squiggle" viewBox="0 0 80 20">
+      <path d="M4 10 Q 12 2, 20 10 T 36 10 T 52 10 T 68 10" fill="none" stroke="#d4639a" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- THE BIG KITTY (hand-drawn style — not Hello Kitty) -->
+    <symbol id="kittyBig" viewBox="0 0 220 220">
+      <!-- shadow blob -->
+      <ellipse cx="110" cy="210" rx="60" ry="6" fill="#e8c4d8" opacity=".4"/>
+      <!-- ears -->
+      <path d="M40 70 Q 38 30, 55 22 Q 75 28, 82 68 Z"
+            fill="#fff8fb" stroke="#c8a8b8" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M180 70 Q 182 30, 165 22 Q 145 28, 138 68 Z"
+            fill="#fff8fb" stroke="#c8a8b8" stroke-width="3" stroke-linejoin="round"/>
+      <!-- ear inner -->
+      <path d="M52 58 Q 54 38, 64 35 Q 72 42, 72 60 Z" fill="#ffd0e0" opacity=".7"/>
+      <path d="M168 58 Q 166 38, 156 35 Q 148 42, 148 60 Z" fill="#ffd0e0" opacity=".7"/>
+      <!-- head (slightly imperfect oval) -->
+      <path d="M110 50 Q 50 55, 38 110 Q 35 165, 80 178 Q 110 184, 140 178 Q 185 165, 182 110 Q 170 55, 110 50 Z"
+            fill="#fff8fb" stroke="#c8a8b8" stroke-width="3" stroke-linejoin="round"/>
+      <!-- eyes (slightly different sizes for handmade feel) -->
+      <ellipse cx="82" cy="115" rx="6.5" ry="9" fill="#2a1a3e"/>
+      <ellipse cx="138" cy="115" rx="7" ry="9.5" fill="#2a1a3e"/>
+      <ellipse cx="83.5" cy="111" rx="2" ry="3" fill="#fff"/>
+      <ellipse cx="139.5" cy="111" rx="2" ry="3" fill="#fff"/>
+      <!-- blush -->
+      <ellipse cx="62" cy="138" rx="11" ry="6" fill="#ffb5d0" opacity=".55"/>
+      <ellipse cx="158" cy="138" rx="11" ry="6" fill="#ffb5d0" opacity=".55"/>
+      <!-- nose (tiny triangle) -->
+      <path d="M105 128 L 115 128 L 110 134 Z" fill="#ffa040" stroke="#d4801a" stroke-width="1.5" stroke-linejoin="round"/>
+      <!-- mouth -->
+      <path d="M104 138 Q 108 144, 112 142 Q 116 144, 120 138" fill="none" stroke="#a86090" stroke-width="2" stroke-linecap="round"/>
+      <!-- whiskers (uneven, hand drawn) -->
+      <path d="M40 120 L 70 122" stroke="#c8a8b8" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M38 130 L 68 130" stroke="#c8a8b8" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M42 140 L 70 138" stroke="#c8a8b8" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M180 120 L 150 122" stroke="#c8a8b8" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M182 130 L 152 130" stroke="#c8a8b8" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M178 140 L 150 138" stroke="#c8a8b8" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- BOW (right side, slightly tilted) -->
+      <ellipse cx="148" cy="65" rx="22" ry="13" fill="#ff97b8" stroke="#d4639a" stroke-width="2.5" transform="rotate(-18 148 65)"/>
+      <ellipse cx="180" cy="65" rx="22" ry="13" fill="#ff97b8" stroke="#d4639a" stroke-width="2.5" transform="rotate(18 180 65)"/>
+      <ellipse cx="164" cy="65" rx="8" ry="10" fill="#d4639a" stroke="#a8487a" stroke-width="2"/>
+      <circle cx="161" cy="62" r="2" fill="#fff" opacity=".6"/>
+      <!-- holding heart -->
+      <use href="#heart1" x="85" y="155" width="50" height="46"/>
+    </symbol>
+
+    <!-- Smaller kitty for loader -->
+    <symbol id="kittySmall" viewBox="0 0 220 220">
+      <use href="#kittyBig" width="220" height="220"/>
+    </symbol>
+
+    <!-- RING -->
+    <symbol id="ring" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="70" rx="26" ry="20" fill="none" stroke="#d4a020" stroke-width="6"/>
+      <ellipse cx="50" cy="68" rx="26" ry="20" fill="none" stroke="#ffd966" stroke-width="3"/>
+      <!-- diamond -->
+      <path d="M50 18 L 38 35 L 50 56 L 62 35 Z" fill="#cfe0ff" stroke="#5a8ad6" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M38 35 L 50 30 L 62 35 L 50 42 Z" fill="#fff" opacity=".8"/>
+      <circle cx="46" cy="26" r="1.8" fill="#fff"/>
+      <!-- sparkles around diamond -->
+      <use href="#sparkle1" x="14" y="14" width="14" height="14"/>
+      <use href="#sparkle1" x="72" y="12" width="12" height="12"/>
+      <use href="#sparkle1" x="76" y="50" width="10" height="10"/>
+    </symbol>
+
+    <!-- BIG arrow doodle for scroll cue -->
+    <symbol id="arrowUp" viewBox="0 0 30 40">
+      <path d="M15 35 L 15 8 M 6 16 L 15 6 L 24 16" fill="none" stroke="#7a9ed4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+  </defs>
+</svg>
+
+<!-- ============================================================
+     START GATE
+============================================================ -->
+<div id="start-gate">
+  <svg width="200" height="120" viewBox="0 0 200 120" style="margin-bottom:6px">
+    <use href="#heart1" x="35" y="20" width="50" height="48" />
+    <use href="#sparkle1" x="100" y="10" width="22" height="22"/>
+    <use href="#sparkle1" x="155" y="35" width="18" height="18"/>
+    <use href="#squiggle" x="60" y="80" width="80" height="20"/>
+    <use href="#flower1" x="120" y="60" width="40" height="40"/>
+  </svg>
+  <div class="gate-line1">มีอะไรอยากบอก</div>
+  <div class="gate-line2">เปิดเสียงด้วยนะ <span>♥</span></div>
+  <button class="start-btn" onclick="startExperience()">กดเลย</button>
+</div>
+
+<!-- ============================================================
+     LOADER
+============================================================ -->
+<div id="loader">
+  <div class="kitty-doodle">
+    <svg class="loader-svg" viewBox="0 0 220 220">
+      <use href="#kittyBig"/>
+    </svg>
+  </div>
+  <div class="loader-num" id="loaderNum">0</div>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
+  <div class="loader-msg" id="loaderMsg">รอแป๊บนึง...</div>
+</div>
+
+<!-- ============================================================
+     AUDIO TOGGLE
+============================================================ -->
+<div id="audio-toggle" onclick="toggleAudio()" title="เสียง">
+  <svg id="audioIcon" viewBox="0 0 22 22">
+    <path d="M3 8 L8 8 L13 4 L13 18 L8 14 L3 14 Z" fill="#d4639a" stroke="#a8487a" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M16 8 Q 19 11, 16 14" fill="none" stroke="#d4639a" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<!-- ============================================================
+     BACKGROUND
+============================================================ -->
+<div class="sky" id="sky"></div>
+
+<!-- parallax blobs -->
+<div class="parallax-layer blob" data-speed="0.12" data-depth="1" style="top:8%;left:-8%;width:420px;height:420px;background:#ffb5d0"></div>
+<div class="parallax-layer blob" data-speed="0.22" data-depth="2" style="top:28%;right:-10%;width:480px;height:480px;background:#a8c8ff"></div>
+<div class="parallax-layer blob" data-speed="0.16" data-depth="1" style="top:58%;left:-6%;width:380px;height:380px;background:#ffd0e0"></div>
+<div class="parallax-layer blob" data-speed="0.28" data-depth="3" style="top:78%;right:-8%;width:340px;height:340px;background:#cfe0ff"></div>
+<div class="parallax-layer blob" data-speed="0.20" data-depth="2" style="top:140%;left:30%;width:400px;height:400px;background:#ffc4dc"></div>
+<div class="parallax-layer blob" data-speed="0.18" data-depth="1" style="top:180%;right:5%;width:360px;height:360px;background:#b8d4ff"></div>
+
+<!-- floating doodles (custom SVG) -->
+<div class="parallax-layer doodle sway" data-speed="0.45" data-depth="2" style="top:11%;left:6%">
+  <svg width="50" height="50"><use href="#bow1"/></svg>
+</div>
+<div class="parallax-layer doodle spin-slow" data-speed="0.65" data-depth="3" style="top:28%;right:8%">
+  <svg width="44" height="44"><use href="#sparkle1"/></svg>
+</div>
+<div class="parallax-layer doodle sway" data-speed="0.4" data-depth="2" style="top:47%;left:9%">
+  <svg width="48" height="48"><use href="#heart1"/></svg>
+</div>
+<div class="parallax-layer doodle spin-slow" data-speed="0.55" data-depth="3" style="top:66%;right:11%">
+  <svg width="50" height="50"><use href="#flower1"/></svg>
+</div>
+<div class="parallax-layer doodle sway" data-speed="0.5" data-depth="2" style="top:92%;left:50%">
+  <svg width="46" height="46"><use href="#heart2"/></svg>
+</div>
+<div class="parallax-layer doodle spin-slow" data-speed="0.6" data-depth="3" style="top:118%;left:8%">
+  <svg width="44" height="44"><use href="#star1"/></svg>
+</div>
+<div class="parallax-layer doodle sway" data-speed="0.45" data-depth="2" style="top:142%;right:9%">
+  <svg width="52" height="52"><use href="#bow1"/></svg>
+</div>
+<div class="parallax-layer doodle spin-slow" data-speed="0.55" data-depth="3" style="top:166%;left:14%">
+  <svg width="44" height="44"><use href="#sparkle1"/></svg>
+</div>
+<div class="parallax-layer doodle sway" data-speed="0.5" data-depth="2" style="top:200%;right:18%">
+  <svg width="48" height="48"><use href="#flower1"/></svg>
+</div>
+<div class="parallax-layer doodle spin-slow" data-speed="0.6" data-depth="3" style="top:225%;left:55%">
+  <svg width="46" height="46"><use href="#heart1"/></svg>
+</div>
+
+<!-- clouds -->
+<div class="parallax-layer doodle" data-speed="0.08" data-depth="1" style="top:8%;left:30%">
+  <svg width="120" height="65" style="opacity:.7"><use href="#cloud1"/></svg>
+</div>
+<div class="parallax-layer doodle" data-speed="0.1" data-depth="1" style="top:50%;left:55%">
+  <svg width="100" height="55" style="opacity:.6"><use href="#cloud1"/></svg>
+</div>
+<div class="parallax-layer doodle" data-speed="0.07" data-depth="1" style="top:130%;left:15%">
+  <svg width="130" height="70" style="opacity:.6"><use href="#cloud1"/></svg>
+</div>
+<div class="parallax-layer doodle" data-speed="0.09" data-depth="1" style="top:200%;left:45%">
+  <svg width="110" height="60" style="opacity:.65"><use href="#cloud1"/></svg>
+</div>
+
+<!-- ============================================================
+     SECTION 1 — HERO
+============================================================ -->
+<section id="hero">
+  <div class="section-inner">
+    <div class="hero-row">
+      <div class="hero-left">
+        <div class="hero-tag">เฮ้ยยย</div>
+        <h1 class="hero-title">
+          มีเรื่อง<br>
+          <em>อยากบอก</em><br>
+          เธอ<span class="pink">.</span><span class="pink">.</span><span class="pink">.</span>
+        </h1>
+        <p class="hero-sub">
+          เลื่อนขึ้นไปอ่านได้เลยนะ<br>
+          ใช้เวลาแป๊บเดียวเอง
+        </p>
+      </div>
+      <div class="hero-kitty-wrap">
+        <svg id="heroKitty" class="hero-kitty" viewBox="0 0 220 220"><use href="#kittyBig"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-cue">
+    เลื่อนขึ้น
+    <svg width="20" height="26" style="display:block;margin:6px auto 0"><use href="#arrowUp"/></svg>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 2 — LETTER
+============================================================ -->
+<section id="letter">
+  <div class="section-inner">
+    <div class="letter-paper">
+      <div class="letter-greeting">ถึงคนที่อ่านอยู่ ~</div>
+
+      <div class="letter-body">
+        <p>เขียนตรงนี้ไม่รู้จะเริ่มยังไงดี ก็เลยเริ่มงี้แหละ</p>
+
+        <p>คือเรารู้จักกันมาก็นานแล้ว เธอน่าจะรู้นะว่าฉันเป็นยังไง <span class="strike pen-blue">เงี่ยน</span> <span class="pen-pink">ขี้น้อยใจ</span> ขี้งอน เอาแต่ใจบางทีก็พูดอะไรไม่รู้เรื่อง</p>
+
+        <p>แต่ที่ฉันรู้แน่ๆ คือเวลาอยู่กับเธอ <span class="pen-pink">มันสบายใจมาก</span> ไม่ต้องเป็นใครเลย</p>
+
+        <p>ฉันไม่ค่อยเก่งเรื่องคำหวานเท่าไหร่ <span class="pen-blue">ถ้าให้พูดต่อหน้าก็คงเขิน</span> เลยทำเว็บนี้ขึ้นมาแทน อาจจะไม่สวยมากแต่ตั้งใจทำให้ทุกอย่าง</p>
+
+        <p style="margin-top:18px;font-size:18px;color:#d4639a;font-weight:600">
+          ที่จะบอกก็คือ&nbsp;ฉันรักเธอนะ
+        </p>
+      </div>
+
+      <div class="letter-sign">— จากฉัน</div>
+      <div class="letter-heart-doodle">
+        <svg width="44" height="42"><use href="#heart1"/></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 3 — STICKY NOTES
+============================================================ -->
+<section id="things">
+  <div class="section-inner">
+    <h2>เรื่องที่ชอบในตัวเธอ</h2>
+    <span class="small">(เขียนไว้ก่อนลืม)</span>
+
+    <div class="notes">
+      <div class="note"><span class="note-num">#1</span>เวลาเธอหัวเราะแล้วตาหยี ฉันชอบมาก</div>
+      <div class="note"><span class="note-num">#2</span>เธอจริงจังเรื่องที่คนอื่นว่าไร้สาระ มันน่ารักดี</div>
+      <div class="note"><span class="note-num">#3</span>เวลาง่วงแล้วเธอพูดไม่รู้เรื่อง ฮาๆ</div>
+      <div class="note"><span class="note-num">#4</span>เธอจำเรื่องเล็กๆ ของฉันได้หมดเลย</div>
+      <div class="note"><span class="note-num">#5</span>นิสัยขี้เกรงใจของเธอ (แต่ก็ไม่ต้องเกรงใจฉันมากนะ)</div>
+      <div class="note"><span class="note-num">#6</span>ตอนเธอโกรธแล้วก็ใจอ่อนเองอะ ตลกดี</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4 — THE QUESTION
+============================================================ -->
+<section id="ask">
+  <div class="section-inner">
+    <div class="ask-tag">เอาจริงๆแล้ว</div>
+    <h2 class="ask-title">แต่งงาน<span class="line2">กับฉันมั้ย?</span></h2>
+    <div class="ask-sub">ไม่ต้องตอบตอนนี้ก็ได้ แต่อยากให้รู้ว่าฉันคิดเรื่องนี้</div>
+
+    <div class="ring-wrap">
+      <svg width="160" height="160"><use href="#ring"/></svg>
+    </div>
+
+    <div class="btn-row" id="btnRow">
+      <button class="btn-yes" onclick="sayYes()">เอาด้วย!</button>
+      <button class="btn-no" id="noBtn">ขอคิดดูก่อน</button>
+    </div>
+  </div>
+</section>
+
+<footer>made for you ♡</footer>
+
+<!-- YES screen -->
+<div id="yes-screen">
+  <div class="yes-big">yay !</div>
+  <div class="yes-sub">ขอบคุณนะ ฉันสัญญาว่าจะดีกับเธอที่สุดเลย ♥</div>
+</div>
+
+<script>
+/* ============================================================
+   AUDIO — mp3 background music (loops)
+============================================================ */
+let bgAudio = null, audioOn = true;
+
+function setupAudio(){
+  try{
+    bgAudio = new Audio('song.mp3');
+    bgAudio.loop = true;
+    bgAudio.volume = 0;            // start silent, fade in
+    bgAudio.play().then(()=>{
+      // fade in over 1.5s
+      const target = 0.55;
+      const step = target / 30;
+      let v = 0;
+      const fade = setInterval(()=>{
+        v += step;
+        if(v >= target){ v = target; clearInterval(fade); }
+        bgAudio.volume = v;
+      }, 50);
+    }).catch(e => console.warn('Audio autoplay blocked:', e));
+  } catch(e){ console.warn('Audio not supported', e); }
+}
+
+function toggleAudio(){
+  if(!bgAudio) return;
+  audioOn = !audioOn;
+  if(audioOn){
+    bgAudio.play();
+    // fade in
+    let v = bgAudio.volume;
+    const fade = setInterval(()=>{
+      v += 0.55/20;
+      if(v >= 0.55){ v = 0.55; clearInterval(fade); }
+      bgAudio.volume = v;
+    }, 40);
+  } else {
+    // fade out then pause
+    let v = bgAudio.volume;
+    const fade = setInterval(()=>{
+      v -= 0.55/20;
+      if(v <= 0){ v = 0; clearInterval(fade); bgAudio.pause(); }
+      bgAudio.volume = v;
+    }, 40);
+  }
+  // update icon
+  const icon = document.getElementById('audioIcon');
+  if(icon){
+    if(audioOn){
+      icon.innerHTML = '<path d="M3 8 L8 8 L13 4 L13 18 L8 14 L3 14 Z" fill="#d4639a" stroke="#a8487a" stroke-width="1.5" stroke-linejoin="round"/><path d="M16 8 Q 19 11, 16 14" fill="none" stroke="#d4639a" stroke-width="2" stroke-linecap="round"/>';
+    } else {
+      icon.innerHTML = '<path d="M3 8 L8 8 L13 4 L13 18 L8 14 L3 14 Z" fill="#aaa" stroke="#888" stroke-width="1.5" stroke-linejoin="round"/><line x1="15" y1="7" x2="20" y2="15" stroke="#888" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="7" x2="15" y2="15" stroke="#888" stroke-width="2" stroke-linecap="round"/>';
+    }
+  }
+}
+
+/* ============================================================
+   START + LOADER
+============================================================ */
+function startExperience(){
+  document.getElementById('start-gate').classList.add('gone');
+  document.getElementById('loader').classList.add('on');
+  setupAudio();
+  startLoader();
+}
+const loaderMessages=[
+  'รอแป๊บนึง...',
+  'จัดของให้พร้อม...',
+  'หาที่ใส่หัวใจ...',
+  'เขียนคำที่จะบอก...',
+  'นับเลขเรียบร้อย...',
+  'พร้อมแล้ว ~',
+];
+function startLoader(){
+  const num=document.getElementById('loaderNum');
+  const fill=document.getElementById('loaderFill');
+  const msg=document.getElementById('loaderMsg');
+  let pct=0;
+  const tm=setInterval(()=>{
+    pct++;
+    num.firstChild.nodeValue = pct;
+    fill.style.width = pct+'%';
+    const idx=Math.floor((pct/100)*loaderMessages.length);
+    msg.textContent = loaderMessages[Math.min(idx, loaderMessages.length-1)];
+    if(pct>=100){
+      clearInterval(tm);
+      setTimeout(()=>{
+        document.getElementById('loader').classList.add('gone');
+        revealSections();
+      }, 600);
+    }
+  }, 38);
+}
+
+/* ============================================================
+   SECTIONS reveal
+============================================================ */
+function revealSections(){
+  const ob = new IntersectionObserver(es=>{
+    es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+  },{threshold:0.15});
+  document.querySelectorAll('.section-inner').forEach(s=>ob.observe(s));
+  document.querySelector('#hero .section-inner').classList.add('in');
+}
+
+/* ============================================================
+   3D parallax
+============================================================ */
+const items = document.querySelectorAll('.parallax-layer');
+let scrollY=0, targetY=0, mouseX=0, mouseY=0;
+window.addEventListener('scroll',()=>{ targetY=window.scrollY; },{passive:true});
+window.addEventListener('mousemove',e=>{
+  mouseX = (e.clientX/window.innerWidth - 0.5)*2;
+  mouseY = (e.clientY/window.innerHeight - 0.5)*2;
+});
+function loop(){
+  scrollY += (targetY-scrollY)*0.1;
+  items.forEach(el=>{
+    const sp=parseFloat(el.dataset.speed)||0.3;
+    const dp=parseFloat(el.dataset.depth)||1;
+    const y = -scrollY*sp;
+    const x = mouseX*dp*12;
+    const yM = mouseY*dp*8;
+    const rot = scrollY*sp*0.03;
+    el.style.transform = `translate3d(${x}px, ${y+yM}px, 0) rotate(${rot}deg)`;
+  });
+  const k = document.getElementById('heroKitty');
+  if(k){
+    k.style.transform = `perspective(800px) rotateY(${mouseX*15 - scrollY*0.05}deg) rotateX(${-mouseY*8}deg) translateY(${scrollY*0.15}px)`;
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+
+/* ============================================================
+   "ขอคิดดูก่อน" — dodges
+============================================================ */
+const noBtn = document.getElementById('noBtn');
+const dodgeMessages=['ไม่ให้คิด','รีบตอบสิ','เถอะน่า','อย่าเลย','ฮึ่ม','...'];
+let dodgeI = 0;
+function dodge(){
+  const maxX = Math.min(window.innerWidth*0.35, 250);
+  const maxY = 220;
+  const x = (Math.random()-0.5)*maxX*2;
+  const y = (Math.random()-0.5)*maxY;
+  noBtn.style.transform = `translate(${x}px, ${y}px) rotate(${(Math.random()-0.5)*40}deg)`;
+  if(dodgeI < dodgeMessages.length){
+    noBtn.textContent = dodgeMessages[dodgeI];
+    dodgeI++;
+  }
+}
+noBtn.addEventListener('mouseenter', dodge);
+noBtn.addEventListener('touchstart', dodge);
+noBtn.addEventListener('click', e=>e.preventDefault());
+
+/* ============================================================
+   YES → sticker rain + screen
+============================================================ */
+const stickerIds = ['heart1','heart2','star1','sparkle1','flower1','bow1'];
+function sayYes(){
+  document.getElementById('yes-screen').classList.add('on');
+  for(let i=0;i<70;i++){
+    setTimeout(()=>{
+      const f = document.createElement('div');
+      f.className='fall';
+      const id = stickerIds[Math.floor(Math.random()*stickerIds.length)];
+      const sz = 28 + Math.random()*30;
+      f.innerHTML = `<svg width="${sz}" height="${sz}"><use href="#${id}"/></svg>`;
+      f.style.left = Math.random()*100 + 'vw';
+      f.style.animationDuration = (3 + Math.random()*4) + 's';
+      document.body.appendChild(f);
+      setTimeout(()=>f.remove(), 7500);
+    }, i*70);
+  }
+}
+</script>
+</body>
+</html>
